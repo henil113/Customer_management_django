@@ -1,3 +1,15 @@
+{% load static %}
+
+<style>
+
+  .Hello-text{
+    font-size:18px;
+    color:#fff;
+    margin-right: 20px;
+  }
+</style>
+
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">Navbar</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -6,12 +18,17 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item active">
+          {% if request.user.is_staff %}
+
           <a class="nav-link" href="{% url 'home' %}">Dashboard</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'products' %}">Products</a>
         </li>
+        {% endif %}
       </ul>
     </div>
+    <span class = "Hello-text"> Hello , {{request.user}}</span>
+    <span><a href = "{% url 'logout' %}">Logout</a></span>
   </nav>
  
