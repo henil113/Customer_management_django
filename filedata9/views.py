@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from .models import *
-from .forms import OrderForm, CreateUserForm
+from .forms import OrderForm, CreateUserForm, CustomerForm
 from django.forms import inlineformset_factory
 from .filters import OrderFilter
 from django.contrib.auth.forms import UserCreationForm
@@ -24,6 +24,7 @@ def registerPage(request):
             username = form.cleaned_data.get('username')
             group = Group.objects.get(name='customer')
             user.groups.add(group)      
+            Customer.objects.create(user=user,name=user.username)
             messages.success(request,'Account was created for'  +  username)
             return redirect('login')
     context={'form':form}
@@ -61,16 +62,38 @@ def home(request):
     context = {'orders':orders, 'customers':customers, 'total_orders':total_orders,'delivered':delivered,'pending':pending}
     return render(request,'filedata9/dashboard.html',context)
 
+
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['customer'])
 def userPage(request):
-    context={}
+    orders = request.user.customer.orders_set.all()
+    total_orders= orders.count()
+    pending= orders.filter(status="Pending").count()
+    delivered = orders.filter(status="Delivered").count()
+    context={'orders':orders,'total_orders':total_orders,'delivered':delivered,'pending':pending}
     return render ( request, 'filedata9/userpage.html',context)
 
 
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['admin'])
 def products(request):
-    uproducts=Products.objects.all()
+    products=Products.objects.all()
     return render(request,'filedata9/products.html', {'products':products})
+
+
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['customer'])
+def accountSettings(request):
+    customer = request.user.customer
+    form = CustomerForm(instance=customer)
+
+    if request.method== 'POST':
+        form = CustomerForm(request.POST,request.FILES, instance=customer)
+        if form.is_valid():
+            form.save
+
+    context={'form':form} 
+    return render(request,'filedata9/accounts.html',context)
 
 
 @login_required(login_url='login')
