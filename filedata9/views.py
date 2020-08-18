@@ -22,9 +22,6 @@ def registerPage(request):
         if form.is_valid():
             user=form.save()
             username = form.cleaned_data.get('username')
-            group = Group.objects.get(name='customer')
-            user.groups.add(group)      
-            Customer.objects.create(user=user,name=user.username)
             messages.success(request,'Account was created for'  +  username)
             return redirect('login')
     context={'form':form}
@@ -88,10 +85,9 @@ def accountSettings(request):
     form = CustomerForm(instance=customer)
 
     if request.method== 'POST':
-        form = CustomerForm(request.POST,request.FILES, instance=customer)
+        form = CustomerForm(request.POST,request.FILES,instance=customer)
         if form.is_valid():
-            form.save
-
+            form.save()
     context={'form':form} 
     return render(request,'filedata9/accounts.html',context)
 
@@ -112,12 +108,13 @@ def customer(request,pk_test):
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['admin'])
 def createOrder(request,pk):
-    OrderFormSet = inlineformset_factory(Customer, Orders , fields=('product','status'),extra=10)
+    OrderFormSet = inlineformset_factory(Customer, Orders , fields=('product','status','note'),extra=10)
     custom= Customer.objects.get(id=pk)
-    formset = OrderFormSet(queryset= Orders.objects.none(), instance=custom)
+    formset = OrderFormSet(instance=custom)
+    #formset = OrderFormSet(queryset= Orders.objects.none(), instance=custom)  // to dont show customer previous orders in formset
     #form = OrderForm(initial={'customer':custom})
     if request.method =='POST':
-        #form=OrderForm(request.POST)
+        form=OrderForm(request.POST)
         formset = OrderFormSet(request.POST,instance=custom)
         if formset.is_valid():
             formset.save()
@@ -132,14 +129,12 @@ def updateOrder(request,pk):
     order = Orders.objects.get(id=pk)
     form = OrderForm(instance=order)
     if request.method =='POST':
-
-        #print('Printing POST', request.POST)
-        form=OrderForm(request.POST, instance=order)
-        if form.is_valid:
+          form=OrderForm(request.POST, instance=order)
+          if form.is_valid():
             form.save()
             return redirect('/')
     context={'form':form}
-    return render(request,'filedata9/order_form.html',context)
+    return render(request,'filedata9/update_order.html',context)
 
 
 @login_required(login_url='login')
